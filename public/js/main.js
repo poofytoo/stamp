@@ -9,6 +9,10 @@ $(function() {
     console.log(data);
   });
 
+  socket.on('all_positions', function (data) {
+		console.log(data);
+	});
+
   var sendUserAction = function(a) {
     data['user1'] = a;
     socket.emit('userAction', data);
@@ -42,5 +46,3 @@ $(function() {
   });
 
 })
-
-
