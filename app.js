@@ -71,28 +71,79 @@ var Player = function(startX, startY, size, id) {
 	this.setdy = function(ndy) {
 		this.dy = ndy;
 	};
+
+	this.incdx = function(ndx) {
+		this.dx += ndx;
+	};
+
+	this.incdy = function(ndy) {
+		this.dy += ndy;
+	};
+
+	this.getInfo = function() {
+		return {'x': this.x,
+						'y': this.y,
+						's': this.size};
+	};
+}
+
+var Block = function(x, y, s) {
+	this.x = x;
+	this.y = y;
+	this.s = s;
+
+	this.getInfo = function() {
+		return {'x': this.x, 
+						'y': this.y};
+	}
 }
 
 var randomInt = function(a, b) {
 	return Math.floor((Math.random() * ((b + 1) - a)) + a);
 }
 
-var players = [];
+var players = {};
 for (var i = 0; i < 5; i++) {
-	players.push(new Player(randomInt(0, 100), randomInt(0, 100), randomInt(0, 100), i));
+	var userId = "user" + i.toString();
+	players[userId] = new Player(randomInt(0, 100), randomInt(0, 100), randomInt(0, 100), i);
+}
+
+var blocks = [];
+for (var i = 0; i < 5; i++) {
+	blocks.push(new Block(randomInt(0, 100), randomInt(0, 100), 5));
 }
 
 var allPositions = function() {
 	var message = {};
 	for (var i in players) {
-		var p = players[i]
-		message[p.getId()] = {
-			'x': p.getX(),
-			'y': p.getY(),
-			's': p.getSize()
-		};
+		var p = players[i];
+		message[p.getId()] = p.getInfo();
+	}
+	message['objects'] = [];
+	for (var i in blocks) {
+		message['objects'].push(blocks[i].getInfo());
 	}
 	return message;
+};
+
+var TICK = 200;
+var speed = 1;
+var updatePlayer = function(userId, keyevent) {
+	if (keyevent == 'UP' || keyevent == 'DOWNRELEASE') {
+		players[userId].incdy(-speed);
+	} else if (keyevent == 'DOWN' || keyevent == 'UPRELEASE') {
+		players[userId].incdy(speed);
+	} else if (keyevent == 'LEFT' || keyevent == 'RIGHTRELEASE') {
+		players[userId].incdx(-speed);
+	} else if (keyevent == 'RIGHT' || keyevent == 'LEFTRELEASE') {
+		players[userId].incdx(speed);
+	}
+};
+
+var updatePositions = function() {
+	for (var p in players) {
+		players[p].updatePosition();
+	}
 };
 
 var io = require('socket.io')(server);
@@ -108,11 +159,12 @@ io.on('connection', function (socket) {
 
 	socket.on('userAction', function (data) {
     console.log(data);
+    updatePlayer(data.userId, data.a);
   });
 
 	setInterval(function(){
-		console.log("broadcasting all positions");
+		updatePositions();
 		console.log(allPositions());
 		socket.emit('all_positions', allPositions()); 
-	}, 2000);
+	}, TICK);
 });
