@@ -104,7 +104,7 @@ var randomInt = function(a, b) {
 
 var players = {};
 for (var i = 0; i < 5; i++) {
-	var userId = "user" + i.toString();
+	var userId = i;
 	players[userId] = new Player(randomInt(0, 100), randomInt(0, 100), randomInt(0, 100), i);
 }
 
@@ -129,13 +129,13 @@ var allPositions = function() {
 var TICK = 200;
 var speed = 1;
 var updatePlayer = function(userId, keyevent) {
-	if (keyevent == 'UP' || keyevent == 'DOWNRELEASE') {
+	if (keyevent == 'UP' || keyevent == 'RELEASEDDOWN') {
 		players[userId].incdy(-speed);
-	} else if (keyevent == 'DOWN' || keyevent == 'UPRELEASE') {
+	} else if (keyevent == 'DOWN' || keyevent == 'RELEASEDUP') {
 		players[userId].incdy(speed);
-	} else if (keyevent == 'LEFT' || keyevent == 'RIGHTRELEASE') {
+	} else if (keyevent == 'LEFT' || keyevent == 'RELEASEDRIGHT') {
 		players[userId].incdx(-speed);
-	} else if (keyevent == 'RIGHT' || keyevent == 'LEFTRELEASE') {
+	} else if (keyevent == 'RIGHT' || keyevent == 'RELEASEDLEFT') {
 		players[userId].incdx(speed);
 	}
 };
