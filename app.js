@@ -4,6 +4,8 @@ var path = require('path');
 var bodyParser = require('body-parser');
 var hbs = require('hbs');
 var routes = require(__dirname + '/routes/routes');
+var io = require('socket.io')(app);
+var fs = require('fs');
 
 var app = express();
 
@@ -21,6 +23,16 @@ app.use(bodyParser.json());
 app.get('/', routes.index);
 // Uncomment the next line to test the database
 // app.get('/test-database', routes.testDatabase);
+
+// Establish connection
+io.on('connection', function (socket) {
+  socket.emit('news', { hello: 'world' });
+
+  // Receiving
+  socket.on('my other event', function (data) {
+    console.log(data);
+  });
+});
 
 http.createServer(app).listen(3000, function(){
   console.log('Express server listening on port ' + 3000);
