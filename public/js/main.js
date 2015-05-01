@@ -1,9 +1,9 @@
 $(function() {
 
   var socket =  io.connect('http://localhost:3000');
-  var pressed = {}
-  var data = {}
-
+  var pressed = {};
+  var data = {};
+  var myUserId = 1; // I don't know what do with that lol
 
   socket.on('news', function (data) {
     console.log(data);
@@ -14,7 +14,10 @@ $(function() {
 	});
 
   var sendUserAction = function(a) {
-    data['user1'] = a;
+    data = {
+      userId: myUserId,
+      a: a
+    }
     socket.emit('userAction', data);
   }
 
