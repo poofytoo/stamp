@@ -33,6 +33,11 @@ $(function() {
       ctx.rect(u.x,u.y,u.s,u.s);
       ctx.stroke();
     });
+    for (i in data.objects) {
+      b = data.objects[i]
+      ctx.fillStyle="#666";
+      ctx.fillRect(b.x,b.y,5,5);
+    }
   }
 
   var init = function() {
