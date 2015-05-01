@@ -1,5 +1,8 @@
 $(function() {
 
+  var canvas = document.getElementById('arena')
+  var ctx = canvas.getContext('2d');
+
   var socket =  io.connect('http://localhost:3000');
   var pressed = {};
   var data = {};
@@ -10,21 +13,26 @@ $(function() {
   });
 
   socket.on('all_positions', function (data) {
-		console.log(data);
+		redrawCanvas(data);
 	});
 
   var sendUserAction = function(a) {
-    data = {
+    var data = {
       userId: myUserId,
       a: a
     }
     socket.emit('userAction', data);
   }
 
-  var init = function() {
+  var redrawCanvas = function(data) {
+    ctx.clearRect(0,0,canvas.width, canvas.height)
+    Object.keys(data).forEach(function (key) {
+      var u = data[key]
+      ctx.fillRect(u.x,u.y,u.s,u.s);
+    });
+  }
 
-    var canvas = document.getElementById('arena')
-    var ctx = canvas.getContext('2d');
+  var init = function() {
     var keys = {
       37: 'LEFT',
       38: 'UP',
@@ -48,7 +56,9 @@ $(function() {
       }
     });
 
-    ctx.fillRect(5,5,10,10);
+    ctx.fillRect(5,5,5,5);
+
+
   }
 
   init();
