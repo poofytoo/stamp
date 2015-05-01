@@ -112,8 +112,9 @@ var Block = function(id, x, y, s, owner) {
 	this.getInfo = function() {
 		return {'id' : this.id,
 						'owner' : this.owner,
-						'x': this.x, 
-						'y': this.y};
+						'x': this.x,
+						'y': this.y,
+						's': this.s};
 	};
 
 	this.getX = function() {
@@ -125,7 +126,7 @@ var Block = function(id, x, y, s, owner) {
 	};
 
 	this.getSize = function() {
-		return this.size;
+		return this.s;
 	};
 
 	this.getId = function() {
@@ -133,8 +134,10 @@ var Block = function(id, x, y, s, owner) {
 	};
 }
 
-var randomInt = function(a, b) {
-	return Math.floor((Math.random() * ((b + 1) - a)) + a);
+var randomInt = function(a, b, n) {
+	var min = a/n;
+	var max = b/n;
+	return Math.floor((Math.random() * ((max + 1) - min)) + min) * n;
 };
 
 var overlaps = function(x1, y1, s1, x2, y2, s2) {
@@ -148,23 +151,28 @@ var overlaps = function(x1, y1, s1, x2, y2, s2) {
 	var y21 = y2;
 	var y22 = y2 + s2;
 
-	if (x22 < x11 || x12 < x21 || y22 < y11 || y12 < y21) {
+	// console.log(x11, x12, y11, y12);
+	// console.log(x21, x22, y21, y22);
+	// console.log(x22 < x11 || x12 < x21 || y22 < y11 || y12 < y21);
+	// return false;
+
+	if (x22 <= x11 || x12 <= x21 || y22 <= y11 || y12 <= y21) {
 		return false;
 	}
 	return true;
 };
 
-
+var SIZE = 10;
 var players = {};
 for (var i = 0; i < 5; i++) {
 	var userId = i;
-	players[userId] = new Player(randomInt(0, 100), randomInt(0, 100), 5, i);
+	players[userId] = new Player(randomInt(0, 100, SIZE), randomInt(0, 100, SIZE), SIZE, i);
 }
 
 var blocks = {};
 for (var i = 0; i < 5; i++) {
 	var blockId = i;
-	blocks[blockId] = new Block(i, randomInt(0, 100), randomInt(0, 100), 5, 0);
+	blocks[blockId] = new Block(i, randomInt(0, 100, SIZE), randomInt(0, 100, SIZE), SIZE, 0);
 }
 
 var allPositions = function() {
@@ -182,7 +190,7 @@ var allPositions = function() {
 };
 
 var TICK = 200;
-var speed = 5;
+var speed = 1*SIZE;
 var updatePlayer = function(userId, keyevent) {
 	if (keyevent == 'UP' || keyevent == 'RELEASEDDOWN') {
 		players[userId].incdy(-speed);
@@ -230,19 +238,20 @@ io.on('connection', function (socket) {
 	});
 
 	socket.on('userAction', function (data) {
-    console.log(data);
-    updatePlayer(data.userId, data.a);
-  });
+		console.log(data);
+		updatePlayer(data.userId, data.a);
+	});
 
-  socket.on('removeblock', function (data) {
-  	console.log(data);
-  	eatBlock(data.player, data.block);
-  });
+	// socket.on('removeblock', function (data) {
+	// 	console.log("remove block");
+	// 	console.log(data);
+	// 	eatBlock(data.player, data.block);
+	// });
 
 	setInterval(function(){
 		updatePositions();
 		checkCollisions();
-		console.log(allPositions());
-		socket.emit('all_positions', allPositions()); 
+		//console.log(allPositions());
+		socket.emit('all_positions', allPositions());
 	}, TICK);
 });

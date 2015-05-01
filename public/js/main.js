@@ -8,6 +8,10 @@ $(function() {
   var data = {};
   var myUserId = 1; // I don't know what do with that lol
 
+  var SIZE = 5;
+  var dx, dy = 0;
+  var speed = 1*SIZE;
+
   socket.on('news', function (data) {
     console.log(data);
   });
@@ -15,6 +19,34 @@ $(function() {
   socket.on('all_positions', function (data) {
 		redrawCanvas(data);
 	});
+
+  var Key = {
+    _pressed: {},
+
+    LEFT: 37,
+    UP: 38,
+    RIGHT: 39,
+    DOWN: 40,
+
+    isDown: function(keyCode) {
+      return keyCode in this._pressed;
+    },
+
+    onKeydown: function(event) {
+      this._pressed[event.keyCode] = event.timestamp;
+    },
+
+    onKeyup: function(event) {
+      delete this._pressed[event.keyCode];
+    }
+  };
+
+  window.addEventListener('keyup', function(event) { Key.onKeyup(event); }, false);
+  window.addEventListener('keydown', function(event) { Key.onKeydown(event); }, false);
+
+
+
+
 
   var sendUserAction = function(a) {
     var data = {
@@ -36,7 +68,7 @@ $(function() {
     for (i in data.objects) {
       b = data.objects[i]
       ctx.fillStyle="#666";
-      ctx.fillRect(b.x,b.y,5,5);
+      ctx.fillRect(b.x,b.y,b.s,b.s);
     }
   }
 
@@ -47,8 +79,10 @@ $(function() {
       39: 'RIGHT',
       40: 'DOWN'
     }
-    
+
     $(document).keydown(function(event){
+      console.log("down");
+      console.log(event);
       var keycode = (event.keyCode ? event.keyCode : event.which);
       if (keys[keycode] && !pressed[keycode]) {
         pressed[keycode] = true;
@@ -57,6 +91,8 @@ $(function() {
     });
 
     $(document).keyup(function(event){
+      console.log("up");
+      console.log(event);
       var keycode = (event.keyCode ? event.keyCode : event.which);
       if (keys[keycode]) {
         pressed[keycode] = false;

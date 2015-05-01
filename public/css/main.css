@@ -3,13 +3,17 @@
 /* To add fonts, add the font files to the font folder and copy the following code
 
 @font-face {
-  font-family: "Your-Font-Family-Name";
-  src: url('/fonts/Your-Font-Family-Name.ttf');
+	font-family: "Your-Font-Family-Name";
+	src: url('/fonts/Your-Font-Family-Name.ttf');
 }
 
 Note that whatever extension your font-family uses, replace the 'ttf' with that extension
 */
 
 body {
-  text-align: center;
+	text-align: center;
+}
+
+#arena {
+	border: 1px solid black;
 }
