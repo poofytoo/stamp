@@ -9,3 +9,7 @@
 
 Note that whatever extension your font-family uses, replace the 'ttf' with that extension
 */
+
+body {
+  text-align: center;
+}

@@ -17,32 +17,36 @@ $(function() {
     data['user1'] = a;
     socket.emit('userAction', data);
   }
-  $(document).keydown(function(event){
+
+  var init = function() {
+
+    var canvas = document.getElementById('arena')
+    var ctx = canvas.getContext('2d');
     var keys = {
       37: 'LEFT',
       38: 'UP',
       39: 'RIGHT',
       40: 'DOWN'
     }
-    var keycode = (event.keyCode ? event.keyCode : event.which);
-    if (keys[keycode] && !pressed[keycode]) {
-      pressed[keycode] = true;
-      sendUserAction(keys[keycode])
-    }
-  });
+    
+    $(document).keydown(function(event){
+      var keycode = (event.keyCode ? event.keyCode : event.which);
+      if (keys[keycode] && !pressed[keycode]) {
+        pressed[keycode] = true;
+        sendUserAction(keys[keycode])
+      }
+    });
 
-  $(document).keyup(function(event){
-    var keys = {
-      37: 'LEFT',
-      38: 'UP',
-      39: 'RIGHT',
-      40: 'DOWN'
-    }
-    var keycode = (event.keyCode ? event.keyCode : event.which);
-    if (keys[keycode]) {
-      pressed[keycode] = false;
-      sendUserAction('RELEASED' + keys[keycode])
-    }
-  });
+    $(document).keyup(function(event){
+      var keycode = (event.keyCode ? event.keyCode : event.which);
+      if (keys[keycode]) {
+        pressed[keycode] = false;
+        sendUserAction('RELEASED' + keys[keycode])
+      }
+    });
 
+    ctx.fillRect(5,5,10,10);
+  }
+
+  init();
 })
