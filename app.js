@@ -31,11 +31,13 @@ server = http.createServer(app).listen(3000, function(){
 
 var io = require('socket.io')(server);
 // Establish connection
+
 io.on('connection', function (socket) {
+
   socket.emit('news', { hello: 'world' });
 
   // Receiving
-  socket.on('my other event', function (data) {
+  socket.on('userAction', function (data) {
     console.log(data);
   });
 });
