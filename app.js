@@ -127,7 +127,7 @@ var allPositions = function() {
 };
 
 var TICK = 200;
-var speed = 1;
+var speed = 5;
 var updatePlayer = function(userId, keyevent) {
 	if (keyevent == 'UP' || keyevent == 'RELEASEDDOWN') {
 		players[userId].incdy(-speed);

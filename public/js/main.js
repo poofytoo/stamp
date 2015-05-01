@@ -28,7 +28,10 @@ $(function() {
     ctx.clearRect(0,0,canvas.width, canvas.height)
     Object.keys(data).forEach(function (key) {
       var u = data[key]
-      ctx.fillRect(u.x,u.y,u.s,u.s);
+      ctx.beginPath();
+      ctx.lineWidth = '1';
+      ctx.rect(u.x,u.y,u.s,u.s);
+      ctx.stroke();
     });
   }
 
