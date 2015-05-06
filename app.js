@@ -33,8 +33,8 @@ var Player = function(startX, startY, size, id) {
 	this.y = startY;
 	this.size = size;
 	this.blocks = 0;
-	this.dx = 0;
-	this.dy = 0;
+	// this.dx = 0;
+	// this.dy = 0;
 
 	this.getX = function() {
 		return this.x;
@@ -44,13 +44,13 @@ var Player = function(startX, startY, size, id) {
 		return this.y;
 	};
 
-	this.getdx = function() {
-		return this.dx;
-	};
+	// this.getdx = function() {
+	// 	return this.dx;
+	// };
 
-	this.getdy = function() {
-		return this.dy;
-	};
+	// this.getdy = function() {
+	// 	return this.dy;
+	// };
 
 	this.getSize = function() {
 		return this.size;
@@ -60,26 +60,26 @@ var Player = function(startX, startY, size, id) {
 		return this.id;
 	};
 
-	this.updatePosition = function() {
-		this.x += this.dx;
-		this.y += this.dy;
-	};
+	// this.updatePosition = function() {
+	// 	this.x += this.dx;
+	// 	this.y += this.dy;
+	// };
 
-	this.setdx = function(ndx) {
-		this.dx = ndx;
-	};
+	// this.setdx = function(ndx) {
+	// 	this.dx = ndx;
+	// };
 
-	this.setdy = function(ndy) {
-		this.dy = ndy;
-	};
+	// this.setdy = function(ndy) {
+	// 	this.dy = ndy;
+	// };
 
-	this.incdx = function(ndx) {
-		this.dx += ndx;
-	};
+	// this.incdx = function(ndx) {
+	// 	this.dx += ndx;
+	// };
 
-	this.incdy = function(ndy) {
-		this.dy += ndy;
-	};
+	// this.incdy = function(ndy) {
+	// 	this.dy += ndy;
+	// };
 
 	this.getInfo = function() {
 		return {'x': this.x,
@@ -176,12 +176,14 @@ for (var i = 0; i < 5; i++) {
 }
 
 var allPositions = function() {
-	var message = {};
+	var message = {
+		players: [],
+		objects: []
+	};
 	for (var i in players) {
 		var p = players[i];
-		message[p.getId()] = p.getInfo();
+		message['players'].push(p.getInfo());
 	}
-	message['objects'] = [];
 	for (var i in blocks) {
 		var b = blocks[i];
 		message['objects'].push(b.getInfo());
@@ -191,23 +193,38 @@ var allPositions = function() {
 
 var TICK = 200;
 var speed = 1*SIZE;
-var updatePlayer = function(userId, keyevent) {
-	if (keyevent == 'UP' || keyevent == 'RELEASEDDOWN') {
-		players[userId].incdy(-speed);
-	} else if (keyevent == 'DOWN' || keyevent == 'RELEASEDUP') {
-		players[userId].incdy(speed);
-	} else if (keyevent == 'LEFT' || keyevent == 'RELEASEDRIGHT') {
-		players[userId].incdx(-speed);
-	} else if (keyevent == 'RIGHT' || keyevent == 'RELEASEDLEFT') {
-		players[userId].incdx(speed);
-	}
-};
 
-var updatePositions = function() {
-	for (var p in players) {
-		players[p].updatePosition();
+var checkPlayerPosition = function(userId, x, y) {
+	var oldx = players[userId].x;
+	var oldy = players[userId].y;
+	if (Math.abs(oldx - x) > SIZE * 2 || Math.abs(oldy - y) > SIZE * 2) {
+		return false;
 	}
-};
+	return true;
+}
+
+var updatePlayerPosition = function(userId, x, y) {
+	players[userId].x = x;
+	players[userId].y = y;
+}
+
+// var updatePlayer = function(userId, keyevent) {
+// 	if (keyevent == 'UP' || keyevent == 'RELEASEDDOWN') {
+// 		players[userId].incdy(-speed);
+// 	} else if (keyevent == 'DOWN' || keyevent == 'RELEASEDUP') {
+// 		players[userId].incdy(speed);
+// 	} else if (keyevent == 'LEFT' || keyevent == 'RELEASEDRIGHT') {
+// 		players[userId].incdx(-speed);
+// 	} else if (keyevent == 'RIGHT' || keyevent == 'RELEASEDLEFT') {
+// 		players[userId].incdx(speed);
+// 	}
+// };
+
+// var updatePositions = function() {
+// 	for (var p in players) {
+// 		players[p].updatePosition();
+// 	}
+// };
 
 var checkCollisions = function() {
 	var toDelete = [];
@@ -224,6 +241,10 @@ var checkCollisions = function() {
 	for (var b in toDelete) {
 		delete blocks[toDelete[b]];
 	}
+	if (toDelete.length != 0) {
+		return true;
+	}
+	return false;
 };
 
 var io = require('socket.io')(server);
@@ -239,8 +260,23 @@ io.on('connection', function (socket) {
 
 	socket.on('userAction', function (data) {
 		console.log(data);
-		updatePlayer(data.userId, data.a);
+		//updatePlayer(data.userId, data.a);
 	});
+
+	socket.on('userUpdate', function (data) {
+		console.log(data);
+		if (checkPlayerPosition(data.userId, data.x, data.y)) {
+			updatePlayerPosition(data.userId, data.x, data.y);
+			socket.emit('all_positions', allPositions());
+		} else {
+			var p = players[data.userId];
+			socket.emit('force_position', {
+				userId: p.userId,
+				x: p.x,
+				y: p.y
+			});
+		}
+	})
 
 	// socket.on('removeblock', function (data) {
 	// 	console.log("remove block");
@@ -249,9 +285,15 @@ io.on('connection', function (socket) {
 	// });
 
 	setInterval(function(){
-		updatePositions();
-		checkCollisions();
+		// updatePositions();
+		if (checkCollisions()) {
+			socket.emit('all_positions', allPositions());
+		}
 		//console.log(allPositions());
-		socket.emit('all_positions', allPositions());
+		//
 	}, TICK);
+
+	setInterval(function(){
+		socket.emit('all_positions', allPositions());
+	}, TICK * 10);
 });
