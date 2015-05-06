@@ -27,12 +27,25 @@ server = http.createServer(app).listen(3000, function(){
 	console.log('Express server listening on port ' + 3000);
 });
 
-var Player = function(startX, startY, size, id) {
+var SIZE = 20;
+var maxBlocks = SIZE/2;
+
+function getRandomColor() {
+    var letters = '0123456789ABCDEF'.split('');
+    var color = '#';
+    for (var i = 0; i < 6; i++ ) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
+var Player = function(startX, startY, size, id, color) {
 	this.id = id;
 	this.x = startX;
 	this.y = startY;
 	this.size = size;
 	this.blocks = 0;
+	this.color = color;
 	// this.dx = 0;
 	// this.dy = 0;
 
@@ -86,15 +99,21 @@ var Player = function(startX, startY, size, id) {
 						'y': this.y,
 						's': this.size,
 						'id': this.id,
+						'color': this.color,
 						'blocks': this.blocks};
 	};
 
 	this.eatBlock = function() {
+		if (this.blocks == maxBlocks) {
+			return false;
+		}
 		this.blocks += 1;
+		console.log("ate block, blocks now " + this.blocks);
+		return true;
 	};
 
 	this.setBlock = function() {
-		if (this.blocks >= 5) {
+		if (this.blocks >= maxBlocks) {
 			this.blocks = 0;
 			return true;
 		}
@@ -102,16 +121,18 @@ var Player = function(startX, startY, size, id) {
 	};
 }
 
-var Block = function(id, x, y, s, owner) {
+var Block = function(id, x, y, s, owner, color) {
 	this.id = id;
 	this.x = x;
 	this.y = y;
 	this.s = s;
 	this.owner = owner;
+	this.color = color;
 
 	this.getInfo = function() {
 		return {'id' : this.id,
 						'owner' : this.owner,
+						'color' : this.color,
 						'x': this.x,
 						'y': this.y,
 						's': this.s};
@@ -132,6 +153,10 @@ var Block = function(id, x, y, s, owner) {
 	this.getId = function() {
 		return this.id;
 	};
+
+	this.setColor = function(color) {
+		this.color = color;
+	}
 }
 
 var randomInt = function(a, b, n) {
@@ -162,17 +187,16 @@ var overlaps = function(x1, y1, s1, x2, y2, s2) {
 	return true;
 };
 
-var SIZE = 10;
 var players = {};
-for (var i = 0; i < 5; i++) {
+for (var i = 0; i < 1; i++) {
 	var userId = i;
-	players[userId] = new Player(randomInt(0, 100, SIZE), randomInt(0, 100, SIZE), SIZE, i);
+	players[userId] = new Player(randomInt(0, 100, SIZE), randomInt(0, 100, SIZE), SIZE, i, getRandomColor());
 }
 
+var nextBlockId = 0;
 var blocks = {};
-for (var i = 0; i < 5; i++) {
-	var blockId = i;
-	blocks[blockId] = new Block(i, randomInt(0, 100, SIZE), randomInt(0, 100, SIZE), SIZE, 0);
+for (var i = 0; i < 50; i++) {
+	blocks[nextBlockId] = new Block(nextBlockId++, randomInt(0, 500, SIZE), randomInt(0, 500, SIZE), SIZE, -1, "#666");
 }
 
 var allPositions = function() {
@@ -188,6 +212,7 @@ var allPositions = function() {
 		var b = blocks[i];
 		message['objects'].push(b.getInfo());
 	}
+	console.log(message);
 	return message;
 };
 
@@ -206,6 +231,15 @@ var checkPlayerPosition = function(userId, x, y) {
 var updatePlayerPosition = function(userId, x, y) {
 	players[userId].x = x;
 	players[userId].y = y;
+}
+
+var userAction = function(userId, a) {
+	if (a == "SPACE") {
+		var p = players[userId];
+		if (p.setBlock()) {
+			blocks[nextBlockId] = new Block(nextBlockId++, p.x, p.y, SIZE, p.userId, p.color);
+		}
+	}
 }
 
 // var updatePlayer = function(userId, keyevent) {
@@ -233,8 +267,9 @@ var checkCollisions = function() {
 			var p = players[i];
 			var b = blocks[j];
 			if (overlaps(p.getX(), p.getY(), p.getSize(), b.getX(), b.getY(), b.getSize())) {
-				toDelete.push(b.getId());
-				p.eatBlock();
+				if (b.owner == -1 && p.eatBlock()) {
+					toDelete.push(b.getId());
+				}
 			}
 		}
 	}
@@ -252,6 +287,7 @@ var io = require('socket.io')(server);
 
 io.on('connection', function (socket) {
 	socket.emit('news', { hello: 'world' });
+	socket.emit('init', allPositions());
 
 	// Receiving
 	socket.on('my other event', function (data) {
@@ -259,6 +295,7 @@ io.on('connection', function (socket) {
 	});
 
 	socket.on('userAction', function (data) {
+		userAction(data.userId, data.a);
 		console.log(data);
 		//updatePlayer(data.userId, data.a);
 	});
@@ -267,8 +304,10 @@ io.on('connection', function (socket) {
 		console.log(data);
 		if (checkPlayerPosition(data.userId, data.x, data.y)) {
 			updatePlayerPosition(data.userId, data.x, data.y);
+			checkCollisions();
 			socket.emit('all_positions', allPositions());
 		} else {
+			console.log("cheater");
 			var p = players[data.userId];
 			socket.emit('force_position', {
 				userId: p.userId,
@@ -286,6 +325,7 @@ io.on('connection', function (socket) {
 
 	setInterval(function(){
 		// updatePositions();
+		checkCollisions();
 		if (checkCollisions()) {
 			socket.emit('all_positions', allPositions());
 		}

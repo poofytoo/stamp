@@ -6,9 +6,9 @@ $(function() {
 	var socket =  io.connect('http://localhost:3000');
 	var pressed = {};
 	var data = {};
-	var myUserId = 1; // I don't know what do with that lol
+	var myUserId = 0; // I don't know what do with that lol
 
-	var SIZE = 10;
+	var SIZE = 20;
 	var x = 0,
 			y = 0,
 			px = 0,
@@ -21,6 +21,19 @@ $(function() {
 
 	socket.on('news', function (data) {
 		console.log(data);
+	});
+
+	socket.on('init', function (data) {
+		state = data;
+		for (i in state.players) {
+			var p = state.players[i];
+			if (p.id == myUserId) {
+				x = p.x;
+				y = p.y;
+				px = pixelize(x);
+				py = pixelize(y);
+			}
+		}
 	});
 
 	socket.on('all_positions', function (data) {
@@ -36,13 +49,23 @@ $(function() {
 		}
 	});
 
+	var sendUserAction = function(a) {
+		var data = {
+			userId: myUserId,
+			a: a
+		}
+		socket.emit('userAction', data);
+	}
+
 	var Key = {
 		_pressed: {},
 
+		SPACE: 32,
 		LEFT: 37,
 		UP: 38,
 		RIGHT: 39,
 		DOWN: 40,
+
 
 		isDown: function(keyCode) {
 			return keyCode in this._pressed;
@@ -50,6 +73,9 @@ $(function() {
 
 		onKeydown: function(event) {
 			this._pressed[event.keyCode] = event.timestamp;
+			if (event.keyCode == this.SPACE) {
+				sendUserAction("SPACE");
+			};
 		},
 
 		onKeyup: function(event) {
@@ -60,13 +86,7 @@ $(function() {
 	window.addEventListener('keyup', function(event) { Key.onKeyup(event); }, false);
 	window.addEventListener('keydown', function(event) { Key.onKeydown(event); }, false);
 
-	var sendUserAction = function(a) {
-		var data = {
-			userId: myUserId,
-			a: a
-		}
-		socket.emit('userAction', data);
-	}
+
 
 	var sendUserUpdate = function() {
 		var data = {
@@ -77,17 +97,18 @@ $(function() {
 		socket.emit('userUpdate', data);
 	}
 
-	var drawPlayer = function(x, y, s) {
+	var drawPlayer = function(x, y, s, b, c) {
 		ctx.beginPath();
-		ctx.lineWidth = '1';
-		ctx.rect(x, y, s, s);
+		ctx.lineWidth = b;
+		ctx.strokeStyle=c;
+		ctx.rect(x + b/2, y + b/2, s - b, s - b);
 		ctx.stroke();
 	}
 
-	var drawBlock = function(x, y, s) {
-		drawPlayer(x, y, s);
-		ctx.fillStyle="#666";
-		ctx.fillRect(x, y, s, s);
+	var drawBlock = function(b) {
+		drawPlayer(b.x, b.y, b.s, 1, b.color);
+		ctx.fillStyle=b.color;
+		ctx.fillRect(b.x, b.y, b.s, b.s);
 	}
 
 	var redrawCanvas = function() {
@@ -96,15 +117,16 @@ $(function() {
 			for (i in state.players) {
 				var p = state.players[i];
 				if (p.id != myUserId) {
-					drawPlayer(p.x, p.y, p.s);
+					//console.log("blocks: " + p.blocks);
+					drawPlayer(p.x, p.y, p.s, p.blocks, p.color);
+				} else {
+					drawPlayer(px, py, SIZE, p.blocks, p.color);
 				}
 			}
 			for (i in state.objects) {
-				var b = state.objects[i];
-				drawBlock(b.x, b.y, b.s);
+				drawBlock(state.objects[i]);
 			}
 		}
-		drawPlayer(px, py, SIZE);
 	};
 
 	var incDxDy = function(ddx, ddy) {
