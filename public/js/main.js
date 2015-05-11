@@ -19,11 +19,12 @@ $(function() {
 
 	var state;
 
-	socket.on('news', function (data) {
-		console.log(data);
-	});
+
 
 	socket.on('init', function (data) {
+
+    console.log(data);
+
 		state = data;
 		for (i in state.players) {
 			var p = state.players[i];
@@ -35,6 +36,10 @@ $(function() {
 			}
 		}
 	});
+
+  socket.on('news', function (data) {
+    console.log(data);
+  });
 
 	socket.on('all_positions', function (data) {
 		state = data;
@@ -86,8 +91,6 @@ $(function() {
 	window.addEventListener('keyup', function(event) { Key.onKeyup(event); }, false);
 	window.addEventListener('keydown', function(event) { Key.onKeydown(event); }, false);
 
-
-
 	var sendUserUpdate = function() {
 		var data = {
 			userId: myUserId,
@@ -132,6 +135,8 @@ $(function() {
 	var incDxDy = function(ddx, ddy) {
 		dx += ddx;
 		dy += ddy;
+
+    console.log(dx, dy)
 	};
 
 	var pixelize = function(x) {

@@ -302,12 +302,16 @@ io.on('connection', function (socket) {
 
 	socket.on('userUpdate', function (data) {
 		console.log(data);
+
 		if (checkPlayerPosition(data.userId, data.x, data.y)) {
 			updatePlayerPosition(data.userId, data.x, data.y);
 			checkCollisions();
 			socket.emit('all_positions', allPositions());
+
 		} else {
+
 			console.log("cheater");
+			
 			var p = players[data.userId];
 			socket.emit('force_position', {
 				userId: p.userId,
