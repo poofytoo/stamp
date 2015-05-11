@@ -20,25 +20,24 @@ $(function() {
 	var state;
 
 	socket.on('init', function (data) {
-    myUserId = data.assignUserId;
-    $('#userId').val(myUserId);
-    // var me = new Player(myUserId);
 
-    //console.log(data);
+    // Recreate Player Object on Client
+    // Can this code be shared?
+    var me = new Player(canvas, data.playerObject);
+    var env = new Environment(me);
+    me.draw(canvas, ctx);
+
+    // Initialize with given ID
+    myUserId = data.playerObject._id
+    $('#userId').val(myUserId);
 
 		state = data;
 
 		for (i in state.players) {
 			var p = state.players[i];
-      console.log(p);
-      /*
-			if (p.g == myUserId) {
-				x = p.x;
-				y = p.y;
-				px = pixelize(x);
-				py = pixelize(y);
+			if (p._id != myUserId) {
+        env.drawOtherPlayer(me, p, canvas, ctx);
 			}
-      */
 		}
 	});
 /*

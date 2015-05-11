@@ -224,7 +224,7 @@ var initPacket = function() {
 	console.log(allPlayers[assignUserId].getID())
 
 	var data = allPositions();
-	data['assignUserId'] = assignUserId;
+	data['playerObject'] = allPlayers[assignUserId];
 
 	return data;
 }
