@@ -19,28 +19,29 @@ $(function() {
 
 	var state;
 
-
-
 	socket.on('init', function (data) {
+    myUserId = data.assignUserId;
+    $('#userId').val(myUserId);
+    // var me = new Player(myUserId);
 
-    console.log(data);
+    //console.log(data);
 
 		state = data;
+
 		for (i in state.players) {
 			var p = state.players[i];
-			if (p.id == myUserId) {
+      console.log(p);
+      /*
+			if (p.g == myUserId) {
 				x = p.x;
 				y = p.y;
 				px = pixelize(x);
 				py = pixelize(y);
 			}
+      */
 		}
 	});
-
-  socket.on('news', function (data) {
-    console.log(data);
-  });
-
+/*
 	socket.on('all_positions', function (data) {
 		state = data;
 	});
@@ -135,8 +136,6 @@ $(function() {
 	var incDxDy = function(ddx, ddy) {
 		dx += ddx;
 		dy += ddy;
-
-    console.log(dx, dy)
 	};
 
 	var pixelize = function(x) {
@@ -211,4 +210,5 @@ $(function() {
 	// }
 
 	//init();
+  */
 })

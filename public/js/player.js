@@ -1,11 +1,13 @@
-  function Player() {
+  function Player(id) {
     this.x = 0;
     this.y = 0;
+    this.size = 20;
+    this.id = id;
   }
 
   Player.prototype.draw = function(canvas, ctx) {
     ctx.clearRect(0,0,canvas.width, canvas.height)
-    ctx.fillRect(5,5,5,5);
+    ctx.fillRect(canvas.width/2 - this.size/2, canvas.height/2 - this.size/2, this.size, this.size);
   };
 
   Player.prototype.redraw = function(canvas, ctx) {
